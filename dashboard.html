@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cart Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .metric-card h3 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .metric-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #2c3e50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cart Dashboard</h1>
+    
+    <div class="metrics-grid" id="metrics">
+        <!-- Las métricas se cargarán aquí con JavaScript -->
+    </div>
+    
+    <table id="carts-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User ID</th>
+                <th>Total</th>
+                <th>Descuento</th>
+                <th>Promedio</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody id="carts-body">
+            <!-- Las filas se cargarán aquí con JavaScript -->
+        </tbody>
+    </table>
+    
+    <script>
+    const API_URL = "http://localhost:8000";
+
+    async function cargarMetricas() {
+        try {
+            const response = await fetch(`${API_URL}/api/metrics`);
+            const data = await response.json();
+            
+            const metricsDiv = document.getElementById("metrics");
+            metricsDiv.innerHTML = `
+                <div class="metric-card">
+                    <h3>Carritos procesados</h3>
+                    <div class="value">${data.total_carts}</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Valor total</h3>
+                    <div class="value">$${data.total_value.toFixed(2)}</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Descuentos totales</h3>
+                    <div class="value">$${data.total_discount.toFixed(2)}</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Promedio por carrito</h3>
+                    <div class="value">$${data.average_value.toFixed(2)}</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Errores</h3>
+                    <div class="value">${data.total_errors}</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Último carrito</h3>
+                    <div class="value">${data.last_cart_id}</div>
+                </div>
+            `;
+        } catch (error) {
+            console.error("Error al cargar métricas:", error);
+        }
+    }
+
+    // Cargar métricas al abrir la página
+    cargarMetricas();
+
+    async function cargarCarritos() {
+    try {
+        const response = await fetch(`${API_URL}/api/carts`);
+        const data = await response.json();
+        
+        const tbody = document.getElementById("carts-body");
+        tbody.innerHTML = "";
+        
+        data.carts.forEach(carrito => {
+            const fila = `
+                <tr>
+                    <td>${carrito.id}</td>
+                    <td>${carrito.userId}</td>
+                    <td>$${carrito.total.toFixed(2)}</td>
+                    <td>$${carrito.discountAmount.toFixed(2)}</td>
+                    <td>$${carrito.averageProductValue.toFixed(2)}</td>
+                    <td>${carrito.status}</td>
+                </tr>
+            `;
+            tbody.innerHTML += fila;
+        });
+    } catch (error) {
+        console.error("Error al cargar carritos:", error);
+    }
+}
+
+cargarCarritos();
+
+// Actualizar cada 5 segundos
+setInterval(() => {
+    cargarMetricas();
+    cargarCarritos();
+}, 5000);
+    </script>
+</body>
+</html>
